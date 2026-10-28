@@ -50,10 +50,11 @@ const VARIABLES = [
 
 // Primeros RND de la secuencia y en qué variable se usó cada uno (sale de correr el motor).
 function primerosUsos(cantidad) {
-  const r = ejecutarSimulacion({
-    ...P,
-    ejecucion: { ...P.ejecucion, cantidadFilas: cantidad },
-  });
+  // Siempre desde el sistema vacío: la tabla muestra el generador, no un estado inicial cargado.
+  const r = ejecutarSimulacion(
+    { ...P, ejecucion: { ...P.ejecucion, cantidadFilas: cantidad } },
+    { usarEstadoInicial: false },
+  );
   const usos = [];
   for (const fila of r.filas) {
     if (fila.fila === 0) {

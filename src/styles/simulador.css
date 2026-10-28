@@ -265,6 +265,24 @@
   font-weight: 600;
 }
 
+/* Estado inicial (solo lectura). */
+.grupo-con-error legend {
+  color: var(--error);
+}
+.estado-inicial-resumen {
+  margin: 0 0 0.75rem;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.9375rem;
+}
+.estado-inicial-errores {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
 /* Estadísticas. */
 .panel-estadisticas {
   display: grid;

@@ -10,7 +10,12 @@ import {
   EVENTO,
   EVENTO_LLEGADA,
 } from "./vacunatorio/vocabulario.js";
-import { crearEnfermero } from "./vacunatorio/enfermero.js";
+import {
+  crearEnfermero,
+  intentarIniciarLote,
+} from "./vacunatorio/enfermero.js";
+import { cargarEstadoInicial } from "./estadoInicial.js";
+import { ESTADO_INICIAL } from "../config/estadoInicial.js";
 import {
   crearEstadisticas,
   acumularTiempoTranscurrido,
@@ -107,7 +112,11 @@ function lugaresNecesarios(filas) {
   };
 }
 
-export function ejecutarSimulacion(parametros) {
+// usarEstadoInicial: false fuerza a arrancar vacío (lo usa la slide del generador).
+export function ejecutarSimulacion(
+  parametros,
+  { usarEstadoInicial = true } = {},
+) {
   const {
     tiempoSimulacionMinutos,
     topeIteraciones,
@@ -116,6 +125,8 @@ export function ejecutarSimulacion(parametros) {
   } = parametros.ejecucion;
   const ctx = prepararContexto(parametros);
   const sistema = crearSistema();
+  if (usarEstadoInicial && ESTADO_INICIAL.activo)
+    cargarEstadoInicial(sistema, ESTADO_INICIAL, ctx);
   const filas = [];
 
   // Se muestran i filas a partir de la hora j; el resto no se guarda.
@@ -133,11 +144,15 @@ export function ejecutarSimulacion(parametros) {
     }
   };
 
-  // Fila 0: se programan las primeras llegadas en el orden configurado.
+  // Fila 0: se programan las llegadas que no vinieron dadas, en el orden configurado.
   let novedades = crearNovedades();
   for (const tipo of ORDEN_LLEGADAS_INICIALES) {
-    novedades.llegadas[tipo] = programarProximaLlegada(sistema, tipo, ctx);
+    if (sistema.proximaLlegada[tipo] === null) {
+      novedades.llegadas[tipo] = programarProximaLlegada(sistema, tipo, ctx);
+    }
   }
+  // Si el estado inicial deja al enfermero libre con gente para vacunar, arranca un lote ya.
+  intentarIniciarLote(sistema, ctx, novedades);
   let evento = EVENTO.INICIALIZACION;
   let numeroFila = 0;
   registrarSiCorresponde(numeroFila, evento, novedades);

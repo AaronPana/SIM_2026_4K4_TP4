@@ -5,7 +5,7 @@ Simulación de eventos discretos de un vacunatorio con un solo enfermero, dos ti
 La app tiene dos partes:
 
 - **Presentación**: 8 slides con el caso, las reglas, los objetos, eventos y colas, las variables aleatorias, las estadísticas, las decisiones del grupo y el vector de estado.
-- **Simulador**: parámetros editables con unidades y validación, estadísticas finales, vector de estado con selección de fila, foto del instante y exportación a Excel.
+- **Simulador**: parámetros editables con unidades y validación, criterios del modelo a la vista, estado inicial opcional, estadísticas finales, vector de estado con selección de fila, foto del instante y exportación a Excel.
 
 ---
 
@@ -27,6 +27,7 @@ La app tiene dos partes:
 - [Criterios configurables](#criterios-configurables)
 - [Consultas pendientes con la cátedra](#consultas-pendientes-con-la-cátedra)
 - [Fin de la simulación](#fin-de-la-simulación)
+- [Estado inicial](#estado-inicial)
 - [Análisis de resultados](#análisis-de-resultados)
 - [Vector de estado](#vector-de-estado)
 - [Parámetros](#parámetros)
@@ -140,7 +141,7 @@ La caja de COVID no es un objeto: se abre y se usa completa al iniciar el lote, 
 
 | Evento                 | Tipo            | Qué hace                                                                                                                  |
 | ---------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Inicialización         | —               | Programa la primera llegada de COVID y la de gripe                                                                        |
+| Inicialización         | —               | Carga el estado inicial (si está activo) y programa las llegadas que no vinieron dadas                                    |
 | Llegada grupo COVID    | Llegada         | Sortea próxima llegada y tamaño; el grupo entra a su cola; si el enfermero está libre, intenta arrancar un lote           |
 | Llegada grupo gripe    | Llegada         | Ídem para gripe                                                                                                           |
 | Fin de vacunación      | Fin de atención | Se retiran los grupos completos; los partidos pasan a "Esperando resto"; el enfermero elige el próximo lote o queda libre |
@@ -221,31 +222,40 @@ Se calculan con contadores y acumuladores que se actualizan en cada evento. Se m
 
 ## Decisiones del grupo
 
-| Tema                         | Decisión                                                                                                                                          |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Reloj                        | En minutos. X y j se cargan en horas o minutos (conversor); el vencimiento en horas o minutos; la vacunación en segundos. Todo se pasa a minutos. |
-| Valores por defecto          | X = 24 h (el vacunatorio atiende las 24 horas), vencimiento 1 h, j = 0, i = 100, tope 100.000. El enunciado no los fija.                          |
-| Valores fijos                | Cajas de 5 y 10 dosis y mínimo de 1 persona por grupo: no están en rojo, quedan como constantes en el código.                                     |
-| Orden de los RND             | Inicialización: COVID y después gripe. En cada llegada: próxima llegada y después personas. Configurable.                                         |
-| Cola y lote                  | Cola por grupo; el lote toma personas en ese orden.                                                                                               |
-| Lote de COVID                | Una caja por lote: exactamente 5 personas.                                                                                                        |
-| Lote de gripe                | Hasta las dosis que le quedan a la caja abierta (máximo 10).                                                                                      |
-| Grupo partido                | Queda "Esperando resto" al frente de su cola y se retira completo. Para el mínimo de 5 cuentan solo los pendientes.                               |
-| Apertura de la caja de gripe | Al iniciar un lote de gripe sin caja abierta (no al llegar los pacientes).                                                                        |
-| Vencimiento                  | Las dosis se usan al iniciar el lote; el vencimiento descarta solo las no asignadas. Si la caja se agota, el vencimiento se cancela.              |
-| Alternancia                  | Preferente: si no puede atender el tipo que le toca, atiende el otro.                                                                             |
-| Primer lote                  | Decide quién llega primero. El desempate (COVID) solo actúa si, sin lote anterior, se pueden atender ambos tipos en el mismo instante.            |
-| Espera                       | Hasta que empieza a vacunarse el primer integrante.                                                                                               |
-| "Cajas colocadas"            | Cajas abiertas, incluida la que esté abierta al final.                                                                                            |
-| Eventos simultáneos          | Vencimiento > fin de vacunación > llegada COVID > llegada gripe.                                                                                  |
-| Última fila                  | Se muestra siempre, con los grupos presentes al terminar.                                                                                         |
-| Precisión                    | Truncar, nunca redondear (igual que el TP3).                                                                                                      |
+| Tema                         | Decisión                                                                                                                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reloj                        | En minutos. X y j se cargan en horas o minutos (conversor); el vencimiento en horas o minutos; la vacunación en segundos. Todo se pasa a minutos.                          |
+| Valores por defecto          | X = 24 h (el vacunatorio atiende las 24 horas), vencimiento 1 h, j = 0, i = 100, tope 100.000. El enunciado no los fija.                                                   |
+| Valores fijos                | Cajas de 5 y 10 dosis y mínimo de 1 persona por grupo: no están en rojo, quedan como constantes en el código.                                                              |
+| Orden de los RND             | Inicialización: COVID y después gripe. En cada llegada: próxima llegada y después personas. Configurable.                                                                  |
+| Cola y lote                  | Cola por grupo; el lote toma personas en ese orden.                                                                                                                        |
+| Lote de COVID                | Una caja por lote: exactamente 5 personas.                                                                                                                                 |
+| Lote de gripe                | Hasta las dosis que le quedan a la caja abierta (máximo 10).                                                                                                               |
+| Grupo partido                | Queda "Esperando resto" al frente de su cola y se retira completo. Para el mínimo de 5 cuentan solo los pendientes.                                                        |
+| Apertura de la caja de gripe | Al iniciar un lote de gripe sin caja abierta (no al llegar los pacientes).                                                                                                 |
+| Vencimiento                  | Las dosis se usan al iniciar el lote; el vencimiento descarta solo las no asignadas. Si la caja se agota, el vencimiento se cancela.                                       |
+| Alternancia                  | Preferente: si no puede atender el tipo que le toca, atiende el otro.                                                                                                      |
+| Primer lote                  | Decide quién llega primero. El desempate (COVID) solo actúa si, sin lote anterior, se pueden atender ambos tipos en el mismo instante.                                     |
+| Espera                       | Hasta que empieza a vacunarse el primer integrante.                                                                                                                        |
+| "Cajas colocadas"            | Cajas abiertas, incluida la que esté abierta al final.                                                                                                                     |
+| Eventos simultáneos          | Vencimiento > fin de vacunación > llegada COVID > llegada gripe.                                                                                                           |
+| Última fila                  | Se muestra siempre, con los grupos presentes al terminar.                                                                                                                  |
+| Precisión                    | Truncar, nunca redondear (igual que el TP3).                                                                                                                               |
+| Estado inicial               | Opcional, en `src/config/estadoInicial.js` (por defecto arranca vacío). El reloj 0 es el inicio; lo anterior tiene horas negativas. Ver [Estado inicial](#estado-inicial). |
 
 ---
 
 ## Criterios configurables
 
-Las interpretaciones discutibles están en `src/config/criteriosModelo.js`. Se cambian ahí sin tocar la lógica, y la hoja "Criterios del modelo" del Excel registra con cuáles se corrió.
+Las interpretaciones discutibles están en `src/config/criteriosModelo.js`. Se cambian ahí sin tocar la lógica.
+
+Los criterios con que corre la simulación se ven en tres lugares, y todos toman sus textos de `src/utils/descripcionCriterios.js`:
+
+- **Simulador**: bloque "Criterios del modelo" al final del formulario, de solo lectura, con el valor de cada criterio y qué significa.
+- **Presentación**: slides 4, 5, 6 y 7 y el diagrama del motor.
+- **Excel**: hoja "Criterios del modelo", con el criterio, el valor usado y qué significa.
+
+Al cambiar un criterio en `criteriosModelo.js`, todo eso se actualiza solo. Lo único que hay que editar a mano es este README.
 
 | Constante                       | Valor actual                                                 | Qué cambia                                                                                                                                                                                          |
 | ------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -275,6 +285,60 @@ Los dos órdenes de RND cambian qué número aleatorio usa cada variable, y por 
 - **Grupos esperando al final**: no entran en los promedios de espera ni de permanencia.
 - **Caja de gripe abierta al final**: sus dosis no vencieron todavía, así que **no se cuentan como descartadas**. Se informan aparte como "dosis sin usar al final". La caja sí cuenta como colocada.
 - Un lote en curso al final: su tiempo ocupado se cuenta hasta X; sus grupos figuran como "Vacunándose" en la última fila.
+
+---
+
+## Estado inicial
+
+Por defecto la simulación arranca con el vacunatorio vacío, como si recién abriera (`activo: false`). También puede arrancar desde una situación puntual, con grupos esperando, un lote en curso y una caja abierta. Se configura en `src/config/estadoInicial.js` poniendo `activo: true` y completando los datos.
+
+### Cómo se describe
+
+**El reloj 0 es el inicio de la simulación.** Lo que pasó antes se escribe con horas negativas: un grupo que llegó hace 6 minutos tiene `horaLlegada: -6`. Así X, j y el resto de los parámetros no cambian de significado.
+
+| Parte            | Qué se carga                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `proximaLlegada` | Próxima llegada de COVID y de gripe (en minutos, mayor a 0). Con `null` se sortea como siempre, consumiendo un RND en el orden de los criterios.             |
+| `grupos`         | Grupos presentes por tipo, en orden de llegada: tamaño, vacunados, en lote, pendientes y hora de llegada. El estado de cada grupo se deduce de esos números. |
+| `enfermero`      | `finVacunacion` (obligatorio si hay un lote en curso, `null` si no) y `ultimoTipoAplicado` (solo se usa si arranca libre).                                   |
+| `cajaGripe`      | Dosis restantes, hora de apertura y hora de vencimiento. `null` si no hay caja abierta.                                                                      |
+
+El **lote en curso no se carga aparte**: se deduce de los grupos que tienen personas "en lote". Así es más difícil cargar algo incoherente.
+
+Ejemplo (el que viene en el archivo): dos grupos de COVID esperando (3 y 2 personas, 5 pendientes), el enfermero vacunando a 3 de un grupo de gripe de 4 hasta el minuto 0,9, y una caja de gripe abierta hace 25 minutos con 4 dosis, que vence en el minuto 35.
+
+### Validación
+
+El estado se valida contra las reglas del modelo y contra los **parámetros actuales del formulario**:
+
+- En cada grupo, vacunados + en lote + pendientes = tamaño, y el tamaño respeta el máximo de personas por grupo.
+- Un grupo ya vacunado completo no puede seguir en el sistema, y su hora de llegada es ≤ 0.
+- El lote en curso es de un solo tipo: exactamente 5 personas si es COVID, como máximo 10 si es gripe.
+- El fin del lote es mayor a 0 y no puede superar su duración completa (personas · segundos por persona). Sin lote, el fin de vacunación es `null`.
+- La caja tiene entre 1 y 10 dosis, se abrió antes del inicio, vence después del inicio y vence exactamente "vencimiento" minutos después de abierta.
+- Las próximas llegadas son mayores a 0 o `null`, y el último tipo aplicado es COVID, gripe o `null`.
+
+Si está activo, el formulario muestra un bloque **"Estado inicial"** con el resumen de lo cargado: grupos, enfermero, caja y próximas llegadas. Si algo no cierra, aparece la lista de errores en rojo y **"Simular" queda bloqueado**. Se reevalúa en vivo: si cambiás un parámetro del que depende (máximo de personas, segundos por persona o vencimiento), los errores aparecen o desaparecen solos.
+
+El motor vuelve a validar al arrancar, como red de seguridad: si algo se escapara, el error se muestra en el aviso rojo del simulador.
+
+### Cómo arranca
+
+- La **fila 0** muestra el estado cargado: grupos en sus lugares, enfermero, caja (como "caja 0") y próximas llegadas.
+- Se sortean solo las llegadas que no vinieron dadas.
+- Si el estado deja al enfermero libre con gente para vacunar, arranca un lote en la misma fila 0.
+- Los grupos siguen la numeración: si había dos grupos de COVID, el próximo que llega es COV-3.
+- La slide 5 ("Primeros RND y dónde se usaron") se arma siempre con el sistema vacío, porque muestra cómo funciona el generador y no un estado cargado.
+
+### Decisiones sobre las estadísticas
+
+| Tema                                          | Decisión                                                                                                                                 |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Espera de los grupos que ya estaban esperando | Se mide desde su llegada real, incluido el tiempo anterior al inicio.                                                                    |
+| Grupos que ya habían empezado a vacunarse     | Su espera ocurrió antes del inicio: no se registra.                                                                                      |
+| Caja abierta antes del inicio                 | Se muestra como "caja 0". No cuenta como caja colocada en el tiempo simulado; sus dosis aplicadas y, si vence, sus descartes sí cuentan. |
+| Acumuladores                                  | Arrancan en cero: se mide solo lo que pasa desde el inicio.                                                                              |
+| Balance de dosis                              | Cajas colocadas · 10 + dosis iniciales de la caja 0 = aplicadas + descartadas + sin usar al final.                                       |
 
 ---
 
@@ -350,6 +414,9 @@ Cada grupo ocupa un **lugar** de su tipo al llegar (el primero libre) y lo conse
 - Clic en una fila para seleccionarla, o flechas ↑ ↓ con la tabla enfocada. La selección se mantiene al hacer scroll vertical u horizontal.
 - La tabla es virtualizada (solo dibuja las filas visibles), con encabezados anclados y sin parpadeos, aunque se muestren 100.000 filas.
 - Debajo, la **foto del instante** muestra la fila seleccionada como tarjetas: el enfermero, la caja de gripe y cada grupo con su estado. Cada persona del grupo es un punto: lleno (vacunada), amarillo (en el lote actual) o hueco (pendiente).
+- La foto lista los **próximos eventos programados ordenados por hora** (si empatan, por la prioridad configurada). El primero, marcado "el siguiente", es el evento de la fila de abajo.
+
+**Qué son los próximos eventos**: en cada instante solo se conoce el próximo evento de cada tipo (una llegada COVID, una de gripe, el fin del lote en curso y el vencimiento de la caja abierta). Los demás se generan a medida que ocurren: por ejemplo, el fin de un lote que todavía no arrancó no figura hasta que ese lote empieza. Por eso la lista no coincide con todas las filas que siguen, pero el primero siempre es la fila de abajo.
 
 ### Ejemplo: primeras filas con los valores por defecto
 
@@ -383,6 +450,8 @@ Todos los valores en rojo del enunciado son parametrizables. El formulario queda
 - **Conversor horas ↔ minutos**: en X, j y vencimiento se completa cualquiera de los dos inputs y el otro se actualiza solo. Se guarda y se valida el valor en minutos.
 - **Mostrar todas las filas** pone j = 0 e i = tope de iteraciones. Antes de simular no se sabe cuántas iteraciones habrá, pero nunca pueden ser más que el tope.
 - **Restaurar valores del enunciado** vuelve a los valores por defecto.
+- **Estado inicial**: si está activo, el formulario muestra su resumen y sus errores; con errores no se puede simular (ver [Estado inicial](#estado-inicial)).
+- **Criterios del modelo**: al final del formulario se ven, de solo lectura, los criterios configurados en el código (ver [Criterios configurables](#criterios-configurables)).
 
 ---
 
@@ -395,7 +464,7 @@ Exporta exactamente las filas que muestra la tabla (desde la hora j, i filas, m�
 | Vector de estado     | Encabezado agrupado en dos filas, con los mismos colores por objeto que en pantalla |
 | Estadísticas         | Iteraciones, reloj final, corte y estadísticas con su unidad                        |
 | Parámetros           | Los usados en la corrida, tal como se cargaron, con su unidad                       |
-| Criterios del modelo | Valores de `criteriosModelo.js` con los que se corrió                               |
+| Criterios del modelo | Criterio, valor usado y qué significa, según `criteriosModelo.js`                   |
 
 Los decimales van truncados a la precisión elegida (6 si es "Completa") y las celdas quedan numéricas.
 
@@ -405,13 +474,13 @@ Los decimales van truncados a la precisión elegida (6 si es "Completa") y las c
 
 ## Presentación
 
-8 slides a pantalla completa (navegación con flechas ↑ ↓, Inicio y Fin). Ninguna necesita scroll en 1366 × 768 ni en 1440 × 900.
+8 slides a pantalla completa (navegación con flechas ↑ ↓, Inicio y Fin). Ninguna necesita scroll en 1366 × 768 ni en 1440 × 900. Los textos que dependen de los criterios del modelo (orden de los RND, criterio de espera, prioridad de eventos) se leen del código, así que no quedan desfasados.
 
 1. **Portada**: título, materia, curso; grupo e integrantes si están cargados.
 2. **El caso**: diagrama del vacunatorio y lo que se desea conocer.
 3. **Reglas del enfermero y de las cajas**: lotes, alternancia, cajas, grupo partido y diagrama de decisión.
 4. **Objetos, eventos y colas**.
-5. **Variables aleatorias y generador compartido**: fórmulas reemplazadas, orden de uso de los RND, ciclo de 468 y primeros RND con su uso.
+5. **Variables aleatorias y generador compartido**: fórmulas reemplazadas, orden de uso de los RND, ciclo de 468 y primeros RND con su uso (siempre con el sistema vacío, aunque haya un estado inicial activo).
 6. **Estadísticas y sus fórmulas**.
 7. **Decisiones del grupo**.
 8. **Vector de estado y motor**: qué muestra el vector y el ciclo del motor.
@@ -431,6 +500,7 @@ src/
 │   ├── constantes.js                 # portada, precisiones, tope, cajas y mínimos fijos
 │   ├── parametrosPorDefecto.js       # valores del enunciado y los fijados por el grupo
 │   ├── criteriosModelo.js            # interpretaciones configurables (orden de RND, espera, prioridad)
+│   ├── estadoInicial.js              # situación de partida (activo: false = arranca vacío)
 │   └── columnasVector.js             # esquema único de columnas (tabla y Excel)
 │
 ├── domain/                           # lógica pura, sin React
@@ -443,20 +513,22 @@ src/
 │   │   └── enfermero.js              # alternancia, armado y cierre de lotes
 │   ├── eventos/                      # llegadaGrupo, finVacunacion, vencimientoCajaGripe
 │   ├── estadisticas/acumuladores.js  # contadores, esperas, permanencias, tiempos ponderados
+│   ├── estadoInicial.js              # valida y carga el estado inicial sobre el sistema vacío
 │   ├── vectorEstado.js               # arma la foto de una fila
-│   └── motor.js                      # loop de eventos, corte por X o tope, captura desde la hora j
+│   └── motor.js                      # carga el estado inicial, loop de eventos, corte por X o tope, captura desde la hora j
 │
-├── validation/validarParametros.js   # reglas por campo y cruzadas
+├── validation/validarParametros.js   # reglas por campo y cruzadas, más el estado inicial contra los parámetros
 ├── hooks/                            # useParametros (formulario), useSimulacion (motor)
 ├── export/
 │   ├── exportarExcel.js              # arma las 4 hojas con las mismas columnas que la tabla
 │   └── escritorXlsx.js               # escribe el .xlsx de a bloques (soporta 100.000 filas)
-├── utils/                            # truncar, formato, tiempo, parámetros, resumen de estadísticas
+├── utils/                            # truncar, formato, tiempo, parámetros, resumen de estadísticas,
+│                                     # descripcionCriterios (textos de los criterios para UI, slides y Excel)
 │
 ├── components/
 │   ├── presentacion/                 # Deck, Reveal y las 8 slides
 │   ├── diagramas/                    # FlujoVacunatorio, FlujoEnfermero, FlujoMotor (SVG)
-│   ├── parametros/                   # 4 grupos + campos (número, conversor, precisión)
+│   ├── parametros/                   # 4 grupos, estado inicial y criterios del modelo (solo lectura) y campos
 │   ├── resultados/                   # estadísticas, leyenda, vector, foto del instante, estado
 │   └── simulador/Simulador.jsx
 │
@@ -472,6 +544,8 @@ graph TD
     UI --> U[utils]
     H --> V[validation]
     H --> M[domain/motor]
+    V --> EI[domain/estadoInicial]
+    M --> EI
     M --> EV[eventos]
     EV --> VAC[vacunatorio]
     VAC --> ES[estadisticas]
@@ -489,7 +563,7 @@ graph TD
 
 ```mermaid
 flowchart TD
-    S([Inicio]) --> I[Inicialización: programar llegada COVID y gripe]
+    S([Inicio]) --> I[Inicialización: cargar el estado inicial si está activo<br/>y programar las llegadas que falten]
     I --> P[Elegir el próximo evento:<br/>menor hora; empate → prioridad]
     P --> X{¿Supera X?}
     X -- Sí --> F[Evento Fin de simulación en X]
@@ -511,7 +585,9 @@ El motor mantiene un único estado del sistema que cada evento modifica a partir
 - **parametro**: texto con puntos que indica dónde está un valor dentro del objeto de parámetros del formulario. Ejemplo: `"llegadas.gripeMediaMinutos"`. Lo usan los campos, `setCampo` y los errores de validación.
 - **novedades**: lo que pasa durante un evento y solo aparece en su fila (RND sorteados, motivo del lote, novedad de caja).
 - **lugar**: posición de un grupo en las columnas del vector; la conserva hasta retirarse.
+- **próximo evento**: el que está programado para cada tipo en un instante dado; el de menor hora es el que ocurre en la fila siguiente.
 - **pendientes**: personas de un grupo que todavía no empezaron a vacunarse.
+- **reloj 0**: el inicio de la simulación. En el estado inicial, lo que pasó antes se escribe con horas negativas.
 - **truncar**: cortar decimales sin redondear, con `crearTruncador`.
 
 ### Tecnologías

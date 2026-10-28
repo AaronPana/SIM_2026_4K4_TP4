@@ -3,6 +3,7 @@ import GrupoEjecucion from "./GrupoEjecucion.jsx";
 import GrupoGenerador from "./GrupoGenerador.jsx";
 import GrupoLlegadas from "./GrupoLlegadas.jsx";
 import GrupoVacunacion from "./GrupoVacunacion.jsx";
+import GrupoEstadoInicial from "./GrupoEstadoInicial.jsx";
 import CriteriosModelo from "./CriteriosModelo.jsx";
 
 export default function FormularioParametros({ form, onSimular, corriendo }) {
@@ -17,6 +18,7 @@ export default function FormularioParametros({ form, onSimular, corriendo }) {
       <GrupoGenerador form={form} />
       <GrupoLlegadas form={form} />
       <GrupoVacunacion form={form} />
+      <GrupoEstadoInicial form={form} />
       <CriteriosModelo />
       <div className="formulario-acciones">
         <button
@@ -33,6 +35,12 @@ export default function FormularioParametros({ form, onSimular, corriendo }) {
         >
           Restaurar valores del enunciado
         </button>
+        {form.erroresEstadoInicial.length > 0 && (
+          <p className="campo-error" role="status">
+            Corregí el estado inicial en src/config/estadoInicial.js para poder
+            simular.
+          </p>
+        )}
         {cantidadErrores > 0 && (
           <p className="campo-error" role="status">
             Corregí{" "}

@@ -4,6 +4,8 @@ import {
   MAX_ITERACIONES,
   PERSONAS_MINIMO_POR_GRUPO,
 } from "../config/constantes.js";
+import { ESTADO_INICIAL } from "../config/estadoInicial.js";
+import { validarEstadoInicial } from "../domain/estadoInicial.js";
 
 // Convierte lo escrito en el input a número; vacío o inválido → NaN.
 const aNumero = (v) =>
@@ -154,6 +156,30 @@ export function validarParametros(raw) {
     llegadas: validarLlegadas(raw.llegadas, v),
     vacunacion: validarVacunacion(raw.vacunacion, v),
   };
-  const esValido = Object.keys(v.errores).length === 0;
-  return { errores: v.errores, esValido, params: esValido ? params : null };
+  const erroresEstadoInicial = validarEstadoInicialContra(params, v.errores);
+  const esValido =
+    Object.keys(v.errores).length === 0 && erroresEstadoInicial.length === 0;
+  return {
+    errores: v.errores,
+    erroresEstadoInicial,
+    esValido,
+    params: esValido ? params : null,
+  };
+}
+
+// Valida el estado inicial (si está activo) contra los parámetros cargados. Si esos parámetros
+// tienen errores propios, se espera a que se corrijan para no mostrar avisos confusos.
+function validarEstadoInicialContra(params, errores) {
+  if (!ESTADO_INICIAL.activo) return [];
+  const dependeDe = [
+    "llegadas.personasMaximoPorGrupo",
+    "vacunacion.segundosPorPersona",
+    "vacunacion.vencimientoCajaGripeMinutos",
+  ];
+  if (dependeDe.some((parametro) => errores[parametro])) return [];
+  return validarEstadoInicial(ESTADO_INICIAL, {
+    personasMaximoPorGrupo: params.llegadas.personasMaximoPorGrupo,
+    segundosPorPersona: params.vacunacion.segundosPorPersona,
+    vencimientoCajaGripeMinutos: params.vacunacion.vencimientoCajaGripeMinutos,
+  });
 }
