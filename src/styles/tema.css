@@ -1,0 +1,135 @@
+/* Tema: tinta azul pizarra sobre papel frío. Azul = COVID, verde = gripe; el amarillo de señal marca lo que está pasando (lote en curso, selección, última fila). */
+:root {
+  --tinta: #1b2430;
+  --tinta-2: #2f3b4c;
+  --papel: #f3f5f7;
+  --superficie: #ffffff;
+  --linea: #d5dbe2;
+  --linea-suave: #e8ecf0;
+  --texto-suave: #586473;
+  --senal: #f2b705;
+  --senal-suave: #fce8a6;
+  --covid: #2f5d8a;
+  --covid-suave: #e3ecf6;
+  --gripe: #2e7d6b;
+  --gripe-suave: #e1f1ec;
+  --error: #b42318;
+  --error-suave: #fdecea;
+
+  --fuente: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radio: 6px;
+  --sombra-foco: 0 0 0 3px rgba(47, 93, 138, 0.35);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--fuente);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+/* Números alineados en tablas y estimadores. */
+table,
+.formula,
+input {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--sombra-foco);
+}
+
+/* Botones compartidos por presentación y simulador. */
+.boton {
+  font: inherit;
+  font-weight: 600;
+  border-radius: var(--radio);
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.boton-primario {
+  background: var(--tinta);
+  color: #fff;
+}
+.boton-primario:hover:not(:disabled) {
+  background: var(--tinta-2);
+}
+.boton-secundario {
+  background: var(--superficie);
+  color: var(--tinta);
+  border-color: var(--linea);
+}
+.boton-secundario:hover:not(:disabled) {
+  border-color: var(--tinta);
+}
+.boton-texto {
+  background: none;
+  color: var(--covid);
+  padding: 0.25rem 0;
+  font-weight: 500;
+}
+.boton-texto:hover {
+  text-decoration: underline;
+}
+.boton-texto:active {
+  color: var(--texto-suave);
+}
+.boton-icono {
+  font: inherit;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radio);
+  border: 1px solid var(--linea);
+  background: var(--superficie);
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.boton-icono:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.codigo,
+.celda-codigo {
+  font-weight: 700;
+}
+
+.nota {
+  color: var(--texto-suave);
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

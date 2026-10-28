@@ -1,0 +1,636 @@
+/* Pantalla del simulador: barra superior, secciones apiladas, formulario, estadísticas, vector y foto. */
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem clamp(1rem, 4vw, 3rem);
+  background: var(--tinta);
+  color: #fff;
+}
+.barra-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.barra-sub {
+  font-size: 0.875rem;
+  color: #b7c1cd;
+}
+
+.simulador-cuerpo {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.seccion {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 1.25rem 1.5rem;
+  min-width: 0;
+}
+.seccion-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.seccion-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.subtitulo-panel {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.aviso {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radio);
+  background: var(--senal-suave);
+  border-left: 4px solid var(--senal);
+}
+.aviso-error {
+  background: var(--error-suave);
+  border-left-color: var(--error);
+}
+.nota-destacada {
+  color: var(--tinta);
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+.resumen-corrida {
+  margin-bottom: 1rem;
+  max-width: 90ch;
+}
+
+/* Formulario. */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.grupo {
+  border: none;
+  border-top: 1px solid var(--linea);
+  padding: 1rem 0 0;
+  margin: 0;
+  min-width: 0;
+}
+.grupo legend {
+  font-weight: 700;
+  font-size: 1.0625rem;
+  padding-right: 0.75rem;
+}
+.grupo > .nota {
+  margin-bottom: 0.75rem;
+}
+.grupo-acciones {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.grilla-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem 1rem;
+}
+.grilla-campos-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+/* Ejecución: los conversores de tiempo necesitan más ancho que un campo simple. */
+.grilla-campos-ejecucion {
+  grid-template-columns:
+    minmax(240px, 1.4fr) minmax(150px, 1fr) minmax(240px, 1.4fr)
+    minmax(150px, 1fr) minmax(150px, 1fr);
+}
+
+/* Bloques dentro de un grupo (COVID, gripe, personas; lote, cajas). */
+.grilla-bloques {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.bloque {
+  padding: 0.75rem;
+  border: 1px solid var(--linea-suave);
+  border-radius: var(--radio);
+  background: var(--papel);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.bloque h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+.bloque-dist {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--texto-suave);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.campo label,
+.campo-etiqueta {
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+}
+.campo-unidad {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+.campo input,
+.campo select {
+  font: inherit;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+.campo.con-error input {
+  border-color: var(--error);
+  background: var(--error-suave);
+}
+.campo-error {
+  color: var(--error);
+  font-size: 0.8125rem;
+}
+.campo-ayuda {
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+}
+.valor-fijo {
+  padding: 0.45rem 0.6rem;
+  border: 1px dashed var(--linea);
+  border-radius: var(--radio);
+  color: var(--texto-suave);
+}
+
+/* Conversor horas ↔ minutos: dos inputs con su unidad y un "=" entre ambos. */
+.conversor {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.conversor-unidad {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.conversor-unidad input {
+  padding-right: 2.6rem;
+}
+.conversor-unidad span {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+  pointer-events: none;
+}
+.conversor-igual {
+  color: var(--texto-suave);
+}
+
+/* Botón de exportar con el verde de Excel. */
+.boton-excel {
+  background: #217346;
+  color: #fff;
+}
+.boton-excel:hover:not(:disabled) {
+  background: #185c37;
+}
+
+.formulario-acciones {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid var(--linea);
+}
+
+/* Criterios del modelo (solo lectura). */
+.criterios-lista {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem 1.5rem;
+}
+.criterio {
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--linea);
+}
+.criterio dt {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.criterio dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.criterio-valor {
+  font-weight: 600;
+}
+
+/* Estadísticas. */
+.panel-estadisticas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  align-items: start;
+}
+.estadisticas-lista {
+  margin: 0;
+  border-top: 1px solid var(--linea);
+}
+.estadistica {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--linea-suave);
+}
+.estadistica dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Estados como etiquetas de color (vector, leyenda y foto). */
+.estado-chip {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.estado-neutro {
+  background: var(--linea-suave);
+  color: var(--texto-suave);
+}
+.estado-covid {
+  background: var(--covid-suave);
+  color: var(--covid);
+  border-color: var(--covid);
+}
+.estado-gripe {
+  background: var(--gripe-suave);
+  color: var(--gripe);
+  border-color: var(--gripe);
+}
+.estado-esperando {
+  background: var(--superficie);
+  color: var(--tinta);
+  border-color: var(--linea);
+}
+.estado-vacunandose {
+  background: var(--senal);
+  color: var(--tinta);
+}
+.estado-parcial {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--senal) 0 6px,
+    var(--senal-suave) 6px 12px
+  );
+  color: var(--tinta);
+}
+.estado-resto {
+  background: var(--senal-suave);
+  color: var(--tinta);
+  border-color: var(--senal);
+}
+
+/* Leyenda del vector. */
+.leyenda {
+  border: 1px solid var(--linea-suave);
+  border-radius: var(--radio);
+  background: var(--papel);
+  margin-bottom: 0.75rem;
+}
+.leyenda summary {
+  cursor: pointer;
+  padding: 0.6rem 0.9rem;
+  font-weight: 600;
+}
+.leyenda-cuerpo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  padding: 0 0.9rem 0.9rem;
+}
+.leyenda h4 {
+  font-size: 0.9375rem;
+  margin-bottom: 0.35rem;
+}
+.leyenda-lista {
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+}
+.leyenda-lista > div {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  gap: 0.5rem;
+  align-items: start;
+}
+.leyenda-lista dd {
+  margin: 0;
+  color: var(--texto-suave);
+}
+.leyenda-motivo {
+  font-weight: 600;
+}
+
+/* Vector de estado: scroll propio, encabezados anclados y primera columna fija. */
+.tabla-vector {
+  max-height: 65vh;
+  overflow: auto;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  margin-top: 0.5rem;
+  outline: none;
+}
+.tabla-vector:focus-visible {
+  box-shadow: var(--sombra-foco);
+}
+.tabla-vector table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+.tabla-vector th,
+.tabla-vector td {
+  padding: 0 0.6rem;
+  height: 32px;
+  border-bottom: 1px solid var(--linea-suave);
+  border-right: 1px solid var(--linea-suave);
+  text-align: right;
+}
+.tabla-vector thead th {
+  position: sticky;
+  background: var(--tinta);
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  z-index: 2;
+}
+.tabla-vector .fila-grupos th {
+  top: 0;
+  background: var(--tinta-2);
+}
+/* Color del encabezado según el objeto: COVID, gripe, enfermero o caja. */
+.tabla-vector .fila-grupos th.obj-covid {
+  background: var(--covid);
+}
+.tabla-vector .fila-grupos th.obj-gripe {
+  background: var(--gripe);
+}
+.tabla-vector .fila-grupos th.obj-enfermero {
+  background: #5a4a8a;
+}
+.tabla-vector .fila-grupos th.obj-caja {
+  background: #3f6e5f;
+}
+.tabla-vector .fila-titulos th {
+  top: 32px;
+}
+.tabla-vector .col-fija {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--superficie);
+  font-weight: 600;
+}
+.tabla-vector thead .col-fija {
+  z-index: 3;
+}
+.tabla-vector .celda-texto {
+  text-align: left;
+}
+.tabla-vector tbody tr {
+  cursor: pointer;
+}
+.tabla-vector tbody tr:hover td {
+  background: #f2f5f8;
+}
+.tabla-vector tbody tr.fila-ultima td {
+  background: var(--senal-suave);
+  font-weight: 600;
+}
+/* La fila seleccionada se distingue de la última y del hover; se mantiene al hacer scroll. */
+.tabla-vector tbody tr.fila-seleccionada td {
+  background: var(--covid-suave);
+  box-shadow:
+    inset 0 2px 0 var(--covid),
+    inset 0 -2px 0 var(--covid);
+}
+.tabla-vector tbody tr.fila-seleccionada td.col-fija {
+  background: var(--covid);
+  color: #fff;
+}
+.tabla-vector .fila-separador td {
+  text-align: left;
+  color: var(--texto-suave);
+  background: var(--papel);
+  cursor: default;
+}
+.separador-texto {
+  position: sticky;
+  left: 0.6rem;
+}
+
+/* Foto del instante. */
+.foto-titulo {
+  margin-top: 1.25rem;
+}
+.foto-vacia {
+  padding: 1rem;
+  border: 1px dashed var(--linea);
+  border-radius: var(--radio);
+  color: var(--texto-suave);
+}
+.foto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.foto-cabecera p + p {
+  margin-top: 0.2rem;
+}
+/* El próximo evento que va a ocurrir se destaca del resto. */
+.proximo-evento-siguiente {
+  font-weight: 600;
+  color: var(--tinta);
+}
+.foto-grilla {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr) minmax(
+      0,
+      1.6fr
+    );
+  gap: 0.75rem;
+  align-items: start;
+}
+.foto-tarjeta {
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  min-width: 0;
+}
+.foto-tarjeta h4 {
+  font-size: 0.9375rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.foto-covid {
+  border-top: 3px solid var(--covid);
+}
+.foto-gripe {
+  border-top: 3px solid var(--gripe);
+}
+.foto-contador {
+  font-size: 0.75rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--linea-suave);
+  color: var(--texto-suave);
+}
+.foto-datos {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.75rem;
+  font-size: 0.875rem;
+}
+.foto-datos dt {
+  color: var(--texto-suave);
+}
+.foto-datos dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.foto-grupos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.foto-grupo {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+.foto-grupo-id {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.foto-grupo-dato {
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.foto-referencias {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.foto-referencias .persona:not(:first-child) {
+  margin-left: 0.75rem;
+}
+
+/* Una persona del grupo: vacunada (llena), en lote (amarilla) o pendiente (hueca). */
+.personas {
+  display: inline-flex;
+  gap: 3px;
+}
+.persona {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--tinta);
+}
+.persona-vacunada {
+  background: var(--tinta);
+}
+.persona-en-lote {
+  background: var(--senal);
+}
+.persona-pendiente {
+  background: var(--superficie);
+}
+
+@media (max-width: 1100px) {
+  .grilla-campos-ejecucion {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .foto-grilla {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .leyenda-cuerpo {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .grilla-bloques,
+  .panel-estadisticas,
+  .grilla-campos-ejecucion,
+  .foto-grilla {
+    grid-template-columns: 1fr;
+  }
+  .grilla-campos-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
