@@ -16,7 +16,7 @@ const vence = minutosAHoras(
 const REGLAS = [
   [
     "Lotes",
-    `Vacuna N personas juntas en ${P.vacunacion.segundosPorPersona} · N segundos. El lote se arma tomando personas de los grupos por orden de llegada.`,
+    `Vacuna N personas juntas en ${P.vacunacion.segundosPorPersona} · N segundos. COVID toma personas por orden de llegada; gripe vacuna un grupo completo por lote.`,
   ],
   [
     "Alternancia preferente",
@@ -28,11 +28,11 @@ const REGLAS = [
   ],
   [
     "Caja de gripe",
-    `${DOSIS_POR_CAJA_GRIPE} dosis. Se abre al iniciar un lote de gripe sin caja abierta. El lote llega hasta las dosis que le quedan; las sobrantes vencen ${vence} h después de abierta.`,
+    `${DOSIS_POR_CAJA_GRIPE} dosis, a demanda: si las que quedan no alcanzan para el grupo, se usan y se completa con una caja nueva. Las sobrantes vencen ${vence} h después de abierta.`,
   ],
   [
     "Grupo partido",
-    "Si el lote no alcanza para todo el grupo, se vacuna una parte y el resto espera al frente de la cola. El grupo se retira completo, con todos vacunados.",
+    "Solo en COVID: si el lote de 5 no alcanza para todo el grupo, se vacuna una parte y el resto espera al frente de la cola. Se retira completo.",
   ],
   [
     "Dosis usadas",
@@ -45,7 +45,7 @@ export default function SlideReglas() {
     <section className="slide">
       <Reveal className="slide-cuerpo">
         <h2 className="slide-titulo">Reglas del enfermero y de las cajas</h2>
-        <div className="columnas-slide">
+        <div className="columnas-slide columnas-con-diagrama">
           <dl className="lista-definiciones lista-definiciones-compacta">
             {REGLAS.map(([t, d]) => (
               <div key={t} className="definicion definicion-angosta">

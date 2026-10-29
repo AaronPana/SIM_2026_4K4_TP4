@@ -23,7 +23,7 @@ export const ESTADO_INICIAL = {
       { tamanio: 2, vacunados: 0, enLote: 0, pendientes: 2, horaLlegada: -1.4 },
     ],
     [TIPO_VACUNA.GRIPE]: [
-      { tamanio: 4, vacunados: 0, enLote: 3, pendientes: 1, horaLlegada: -2 },
+      { tamanio: 4, vacunados: 0, enLote: 4, pendientes: 0, horaLlegada: -2 },
     ],
   },
 };

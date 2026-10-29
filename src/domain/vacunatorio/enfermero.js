@@ -75,7 +75,7 @@ export function elegirProximoLote(ultimoTipoAplicado, grupos) {
 }
 
 // Toma personas en orden de llegada de los grupos hasta llenar la capacidad del lote.
-// Un grupo que no entra completo queda "Vacunándose parcial" y espera el resto en el próximo lote.
+// En COVID un grupo que no entra completo queda "Vacunándose parcial"; en gripe la capacidad es un grupo entero.
 function armarLote(gruposDelTipo, capacidad, hora, estadisticas, truncar) {
   const composicion = [];
   let lugaresLibres = capacidad;
@@ -112,22 +112,12 @@ function armarLote(gruposDelTipo, capacidad, hora, estadisticas, truncar) {
   return composicion;
 }
 
-// Si el enfermero está libre y puede vacunar a alguien, arranca el próximo lote.
-// Anota en "novedades" el motivo del lote y lo que pasó con la caja de gripe.
-export function intentarIniciarLote(sistema, ctx, novedades) {
-  const { enfermero, grupos, estadisticas, reloj } = sistema;
-  if (enfermero.estado !== ESTADO_ENFERMERO.LIBRE) return;
-
-  const decision = elegirProximoLote(enfermero.ultimoTipoAplicado, grupos);
-  if (!decision) return;
-  const { tipo, motivo } = decision;
-
-  // COVID: se abre una caja y se usa completa. Gripe: se usa la abierta o se abre una nueva.
-  let capacidad;
-  if (tipo === TIPO_VACUNA.COVID) {
-    capacidad = DOSIS_POR_CAJA_COVID;
-    estadisticas.cajasCovidAbiertas++;
-  } else {
+// Cajas de gripe a demanda: usa lo que queda de la abierta y, si no alcanza, abre otra al atender al grupo.
+// Una caja que llega a 0 se agota y su vencimiento se cancela.
+function usarDosisGripe(sistema, ctx, personas, novedades) {
+  const { estadisticas, reloj } = sistema;
+  let faltan = personas;
+  while (faltan > 0) {
     if (sistema.cajaGripe === null) {
       estadisticas.cajasGripeAbiertas++;
       sistema.cajaGripe = abrirCajaGripe({
@@ -138,7 +128,33 @@ export function intentarIniciarLote(sistema, ctx, novedades) {
       });
       novedades.caja.push(`Abre caja ${sistema.cajaGripe.numero}`);
     }
-    capacidad = sistema.cajaGripe.dosisRestantes;
+    const usadas = Math.min(faltan, sistema.cajaGripe.dosisRestantes);
+    sistema.cajaGripe.dosisRestantes -= usadas;
+    faltan -= usadas;
+    if (sistema.cajaGripe.dosisRestantes === 0) {
+      novedades.caja.push(`Caja ${sistema.cajaGripe.numero} agotada`);
+      sistema.cajaGripe = null;
+    }
+  }
+}
+
+// Si el enfermero está libre y puede vacunar a alguien, arranca el próximo lote.
+// Anota en "novedades" el motivo del lote y lo que pasó con la caja de gripe.
+export function intentarIniciarLote(sistema, ctx, novedades) {
+  const { enfermero, grupos, estadisticas, reloj } = sistema;
+  if (enfermero.estado !== ESTADO_ENFERMERO.LIBRE) return;
+
+  const decision = elegirProximoLote(enfermero.ultimoTipoAplicado, grupos);
+  if (!decision) return;
+  const { tipo, motivo } = decision;
+
+  // COVID: una caja de 5 por lote (puede partir grupos). Gripe: el lote es el primer grupo de la cola, completo.
+  let capacidad;
+  if (tipo === TIPO_VACUNA.COVID) {
+    capacidad = DOSIS_POR_CAJA_COVID;
+    estadisticas.cajasCovidAbiertas++;
+  } else {
+    capacidad = grupos.GRIPE.find((g) => g.pendientes > 0).pendientes;
   }
 
   const composicion = armarLote(
@@ -153,16 +169,12 @@ export function intentarIniciarLote(sistema, ctx, novedades) {
     0,
   );
 
-  // Las dosis se consideran usadas al iniciar el lote. Si la caja se agota, su vencimiento se cancela.
+  // Las dosis se consideran usadas al iniciar el lote.
   if (tipo === TIPO_VACUNA.COVID) {
     estadisticas.dosisCovidAplicadas += personas;
   } else {
-    sistema.cajaGripe.dosisRestantes -= personas;
+    usarDosisGripe(sistema, ctx, personas, novedades);
     estadisticas.dosisGripeAplicadas += personas;
-    if (sistema.cajaGripe.dosisRestantes === 0) {
-      novedades.caja.push(`Caja ${sistema.cajaGripe.numero} agotada`);
-      sistema.cajaGripe = null;
-    }
   }
 
   // 22 · N segundos, pasado a minutos (unidad del reloj).
@@ -179,7 +191,7 @@ export function intentarIniciarLote(sistema, ctx, novedades) {
   novedades.motivoLote = motivo;
 }
 
-// Al terminar el lote: los grupos sin pendientes se retiran; los partidos pasan a "Esperando resto".
+// Al terminar el lote: los grupos sin pendientes se retiran; los partidos (solo COVID) pasan a "Esperando resto".
 export function cerrarLote(sistema, ctx) {
   const { enfermero, grupos, estadisticas, reloj } = sistema;
   const tipo = enfermero.tipoLote;

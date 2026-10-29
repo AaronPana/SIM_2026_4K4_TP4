@@ -26,6 +26,7 @@ export function validarEstadoInicial(estado, ctx) {
   const errores = [];
   const tiposEnLote = new Set();
   const personasEnLote = { COVID: 0, GRIPE: 0 };
+  let gruposGripeEnLote = 0;
 
   for (const tipo of TIPOS) {
     estado.grupos[tipo].forEach((g, i) => {
@@ -51,6 +52,15 @@ export function validarEstadoInicial(estado, ctx) {
         );
       if (!(g.horaLlegada <= 0))
         errores.push(`${nombre}: la hora de llegada debe ser ≤ 0 (ya llegó).`);
+      // Gripe no parte grupos: un grupo en lote entra completo y nunca queda con vacunados.
+      if (
+        tipo === TIPO_VACUNA.GRIPE &&
+        (g.vacunados > 0 || (g.enLote > 0 && g.pendientes > 0))
+      )
+        errores.push(
+          `${nombre}: en gripe el grupo entra completo al lote; no puede tener vacunados ni quedar con pendientes estando en lote.`,
+        );
+      if (tipo === TIPO_VACUNA.GRIPE && g.enLote > 0) gruposGripeEnLote++;
       if (g.enLote > 0) tiposEnLote.add(tipo);
       personasEnLote[tipo] += g.enLote;
     });
@@ -64,10 +74,8 @@ export function validarEstadoInicial(estado, ctx) {
     errores.push(
       `Un lote de COVID tiene exactamente ${DOSIS_POR_CAJA_COVID} personas.`,
     );
-  if (personasEnLote.GRIPE > DOSIS_POR_CAJA_GRIPE)
-    errores.push(
-      `Un lote de gripe no puede superar ${DOSIS_POR_CAJA_GRIPE} personas.`,
-    );
+  if (gruposGripeEnLote > 1)
+    errores.push("Un lote de gripe es un solo grupo, completo.");
   if (hayLote && !(estado.enfermero.finVacunacion > 0))
     errores.push(
       "Hay un lote en curso: el fin de vacunación debe ser mayor a 0.",

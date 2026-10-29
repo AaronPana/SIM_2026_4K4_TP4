@@ -17,7 +17,7 @@ export const ORDEN_RND_EN_LLEGADA = [
 ];
 
 // Hasta cuándo se mide la espera de un grupo: inicio de su primer integrante o de su último.
-// Solo cambia en los grupos partidos; en los demás ambos criterios dan lo mismo.
+// Solo cambia en los grupos partidos (solo COVID); en los demás ambos criterios dan lo mismo.
 export const CRITERIO_ESPERA_OPCIONES = {
   PRIMER_INTEGRANTE: "PRIMER_INTEGRANTE",
   ULTIMO_INTEGRANTE: "ULTIMO_INTEGRANTE",

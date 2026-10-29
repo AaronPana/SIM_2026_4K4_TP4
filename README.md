@@ -25,7 +25,6 @@ La app tiene dos partes:
 - [Estadísticas](#estadísticas)
 - [Decisiones del grupo](#decisiones-del-grupo)
 - [Criterios configurables](#criterios-configurables)
-- [Consultas pendientes con la cátedra](#consultas-pendientes-con-la-cátedra)
 - [Fin de la simulación](#fin-de-la-simulación)
 - [Estado inicial](#estado-inicial)
 - [Análisis de resultados](#análisis-de-resultados)
@@ -94,14 +93,14 @@ Se desea conocer:
 2. Llegan grupos de dos tipos con corrientes de llegada independientes: COVID (exponencial, 4 veces cada 15 minutos) y gripe (exponencial, media 5 minutos).
 3. Cada grupo trae de 1 a 4 personas con igual probabilidad, todas para la misma vacuna.
 4. Hay una cola por tipo, por orden de llegada de los grupos, sin límite y sin abandono.
-5. El enfermero vacuna **por lotes**: un lote de N personas tarda 22 · N segundos. El lote se arma tomando personas de los grupos por orden de llegada.
+5. El enfermero vacuna **por lotes**: un lote de N personas tarda 22 · N segundos. En COVID el lote se arma tomando personas de los grupos por orden de llegada; en gripe el lote es **un grupo completo**.
 6. **Alternancia preferente**: al quedar libre le toca el tipo contrario al último lote. Si no puede atender ese tipo, atiende el otro. Nunca queda libre si puede vacunar a alguien.
 7. **COVID**: la caja trae 5 dosis y se abre solo si hay al menos 5 pacientes pendientes. Cada lote de COVID usa una caja: exactamente 5 personas. Nunca sobran dosis de COVID.
-8. **Gripe**: la caja trae 10 dosis. Se abre al iniciar un lote de gripe si no hay una abierta. El lote llega hasta las dosis que le quedan a la caja (máximo 10).
+8. **Gripe**: el lote es el primer grupo de la cola, completo, y la caja de 10 dosis se abre **a demanda**, cuando se atiende al grupo (no antes). Si la caja abierta alcanza, se descuentan las dosis del grupo; si no alcanza (o no hay caja), se usan las que quedan y se completa con una caja nueva. Ejemplos: grupo de 4 con 10 dosis → sobran 6; grupo de 4 con 3 dosis → se usan las 3, esa caja se agota y se abre otra que queda con 9; grupo de 1 con 10 dosis → sobran 9.
 9. Las dosis de gripe sobrantes vencen **X horas después de abierta la caja** y se descartan.
-10. **Grupo partido**: si el lote no alcanza para todo el grupo, se vacuna una parte y el resto queda "Esperando resto", al frente de su cola. El grupo se retira completo, cuando todos están vacunados. Pasa en COVID (lotes de 5) y en gripe (cuando la caja no alcanza).
+10. **Grupo partido (solo COVID)**: si el lote de 5 no alcanza para todo el grupo, se vacuna una parte y el resto queda "Esperando resto", al frente de su cola. El grupo se retira completo, cuando todos están vacunados. En gripe nunca se parte un grupo.
 11. Para el mínimo de 5 pacientes de COVID se cuentan solo los **pendientes** (los que todavía no empezaron a vacunarse).
-12. Las dosis se descuentan al **iniciar** el lote. Si la caja de gripe se agota, su vencimiento se cancela y la caja deja de existir.
+12. Las dosis se descuentan al **iniciar** el lote. Si una caja de gripe se agota (aunque sea a mitad de un grupo), su vencimiento se cancela y la caja deja de existir.
 
 Decisión del enfermero cada vez que queda libre:
 
@@ -123,37 +122,37 @@ Puede vacunar COVID con al menos 5 pendientes; gripe, con al menos 1.
 | -------------- | -------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | Enfermero      | Permanente · servidor                  | Libre · Vacunando COVID · Vacunando gripe                       | Último tipo aplicado, composición del lote, personas en el lote, duración del lote, hora de fin de vacunación                    |
 | Grupo COVID    | Temporal · cliente                     | Esperando · Vacunándose · Vacunándose parcial · Esperando resto | Identificador (COV-n), tamaño, vacunados, en lote, pendientes, hora de llegada, hora de inicio de vacunación, lugar en el vector |
-| Grupo de gripe | Temporal · cliente                     | Ídem grupo COVID                                                | Ídem (identificador GRI-n)                                                                                                       |
+| Grupo de gripe | Temporal · cliente                     | Esperando · Vacunándose (no se parte)                           | Ídem (identificador GRI-n); en lote entra completo                                                                               |
 | Caja de gripe  | Temporal: existe mientras está abierta | Sin caja · Abierta                                              | Número, dosis restantes, hora de apertura, hora de vencimiento                                                                   |
 
 En un grupo siempre se cumple: **vacunados + en lote + pendientes = tamaño**.
 
-| Estado del grupo    | Significado                                                          |
-| ------------------- | -------------------------------------------------------------------- |
-| Esperando           | Nadie del grupo empezó a vacunarse.                                  |
-| Vacunándose         | Todos sus pendientes están en el lote actual; se retira al terminar. |
-| Vacunándose parcial | Una parte está en el lote; el resto no entró por falta de dosis.     |
-| Esperando resto     | Ya se vacunó una parte; espera el próximo lote para el resto.        |
+| Estado del grupo    | Significado                                                               |
+| ------------------- | ------------------------------------------------------------------------- |
+| Esperando           | Nadie del grupo empezó a vacunarse.                                       |
+| Vacunándose         | Todos sus pendientes están en el lote actual; se retira al terminar.      |
+| Vacunándose parcial | Solo COVID: una parte está en el lote de 5; el resto no entró.            |
+| Esperando resto     | Solo COVID: ya se vacunó una parte; espera el próximo lote para el resto. |
 
 La caja de COVID no es un objeto: se abre y se usa completa al iniciar el lote, así que alcanza con contarla.
 
 ### Eventos
 
-| Evento                 | Tipo            | Qué hace                                                                                                                  |
-| ---------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Inicialización         | —               | Carga el estado inicial (si está activo) y programa las llegadas que no vinieron dadas                                    |
-| Llegada grupo COVID    | Llegada         | Sortea próxima llegada y tamaño; el grupo entra a su cola; si el enfermero está libre, intenta arrancar un lote           |
-| Llegada grupo gripe    | Llegada         | Ídem para gripe                                                                                                           |
-| Fin de vacunación      | Fin de atención | Se retiran los grupos completos; los partidos pasan a "Esperando resto"; el enfermero elige el próximo lote o queda libre |
-| Vencimiento caja gripe | Temporal        | Descarta las dosis sobrantes; la caja deja de existir                                                                     |
-| Fin de simulación      | Temporal        | En el instante X: última fila                                                                                             |
+| Evento                 | Tipo            | Qué hace                                                                                                                          |
+| ---------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Inicialización         | —               | Carga el estado inicial (si está activo) y programa las llegadas que no vinieron dadas                                            |
+| Llegada grupo COVID    | Llegada         | Sortea próxima llegada y tamaño; el grupo entra a su cola; si el enfermero está libre, intenta arrancar un lote                   |
+| Llegada grupo gripe    | Llegada         | Ídem para gripe                                                                                                                   |
+| Fin de vacunación      | Fin de atención | Se retiran los grupos completos; los partidos (COVID) pasan a "Esperando resto"; el enfermero elige el próximo lote o queda libre |
+| Vencimiento caja gripe | Temporal        | Descarta las dosis sobrantes; la caja deja de existir                                                                             |
+| Fin de simulación      | Temporal        | En el instante X: última fila                                                                                                     |
 
 ### Colas
 
-| Cola       | Disciplina     | Límite / abandono        | Condición de atención           |
-| ---------- | -------------- | ------------------------ | ------------------------------- |
-| Cola COVID | FIFO por grupo | Sin límite, sin abandono | Al menos 5 pacientes pendientes |
-| Cola gripe | FIFO por grupo | Sin límite, sin abandono | Al menos 1 pendiente            |
+| Cola       | Disciplina     | Límite / abandono        | Condición de atención                            |
+| ---------- | -------------- | ------------------------ | ------------------------------------------------ |
+| Cola COVID | FIFO por grupo | Sin límite, sin abandono | Al menos 5 pacientes pendientes                  |
+| Cola gripe | FIFO por grupo | Sin límite, sin abandono | Al menos 1 pendiente; un grupo completo por lote |
 
 Entre las dos colas decide la **alternancia preferente**: un tipo por lote.
 
@@ -230,9 +229,9 @@ Se calculan con contadores y acumuladores que se actualizan en cada evento. Se m
 | Orden de los RND             | Inicialización: COVID y después gripe. En cada llegada: próxima llegada y después personas. Configurable.                                                                  |
 | Cola y lote                  | Cola por grupo; el lote toma personas en ese orden.                                                                                                                        |
 | Lote de COVID                | Una caja por lote: exactamente 5 personas.                                                                                                                                 |
-| Lote de gripe                | Hasta las dosis que le quedan a la caja abierta (máximo 10).                                                                                                               |
-| Grupo partido                | Queda "Esperando resto" al frente de su cola y se retira completo. Para el mínimo de 5 cuentan solo los pendientes.                                                        |
-| Apertura de la caja de gripe | Al iniciar un lote de gripe sin caja abierta (no al llegar los pacientes).                                                                                                 |
+| Lote de gripe                | Un grupo completo por lote (el primero de la cola). Nunca se parte.                                                                                                        |
+| Grupo partido                | Solo COVID: queda "Esperando resto" al frente de su cola y se retira completo. Para el mínimo de 5 cuentan solo los pendientes.                                            |
+| Apertura de la caja de gripe | A demanda, al atender al grupo (no al llegar). Si la caja abierta no alcanza, se usan sus dosis y se completa con una nueva: no se desperdicia nada.                       |
 | Vencimiento                  | Las dosis se usan al iniciar el lote; el vencimiento descarta solo las no asignadas. Si la caja se agota, el vencimiento se cancela.                                       |
 | Alternancia                  | Preferente: si no puede atender el tipo que le toca, atiende el otro.                                                                                                      |
 | Primer lote                  | Decide quién llega primero. El desempate (COVID) solo actúa si, sin lote anterior, se pueden atender ambos tipos en el mismo instante.                                     |
@@ -257,23 +256,15 @@ Los criterios con que corre la simulación se ven en tres lugares, y todos toman
 
 Al cambiar un criterio en `criteriosModelo.js`, todo eso se actualiza solo. Lo único que hay que editar a mano es este README.
 
-| Constante                       | Valor actual                                                 | Qué cambia                                                                                                                                                                                          |
-| ------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ORDEN_LLEGADAS_INICIALES`      | `[COVID, GRIPE]`                                             | Qué llegada se sortea primero en la inicialización. Invertir el arreglo para empezar por gripe.                                                                                                     |
-| `ORDEN_RND_EN_LLEGADA`          | `[PROXIMA_LLEGADA, TAMANIO_GRUPO]`                           | Qué se sortea primero en cada llegada. Invertir el arreglo para sortear primero las personas.                                                                                                       |
-| `CRITERIO_ESPERA`               | `PRIMER_INTEGRANTE`                                          | Hasta cuándo se mide la espera. Con `ULTIMO_INTEGRANTE`, un grupo partido termina su espera cuando entra al lote su último integrante. En los grupos que no se parten ambos criterios dan lo mismo. |
-| `PRIORIDAD_EVENTOS_SIMULTANEOS` | Vencimiento, fin de vacunación, llegada COVID, llegada gripe | Orden entre eventos del mismo instante.                                                                                                                                                             |
-| `TURNO_INICIAL`                 | `COVID`                                                      | Desempate del primer lote.                                                                                                                                                                          |
+| Constante                       | Valor actual                                                 | Qué cambia                                                                                                                                                                                                               |
+| ------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ORDEN_LLEGADAS_INICIALES`      | `[COVID, GRIPE]`                                             | Qué llegada se sortea primero en la inicialización. Invertir el arreglo para empezar por gripe.                                                                                                                          |
+| `ORDEN_RND_EN_LLEGADA`          | `[PROXIMA_LLEGADA, TAMANIO_GRUPO]`                           | Qué se sortea primero en cada llegada. Invertir el arreglo para sortear primero las personas.                                                                                                                            |
+| `CRITERIO_ESPERA`               | `PRIMER_INTEGRANTE`                                          | Hasta cuándo se mide la espera. Con `ULTIMO_INTEGRANTE`, un grupo partido (solo pasa en COVID) termina su espera cuando entra al lote su último integrante. En los grupos que no se parten ambos criterios dan lo mismo. |
+| `PRIORIDAD_EVENTOS_SIMULTANEOS` | Vencimiento, fin de vacunación, llegada COVID, llegada gripe | Orden entre eventos del mismo instante.                                                                                                                                                                                  |
+| `TURNO_INICIAL`                 | `COVID`                                                      | Desempate del primer lote.                                                                                                                                                                                               |
 
-Los dos órdenes de RND cambian qué número aleatorio usa cada variable, y por lo tanto todas las filas. Por eso conviene confirmarlos con la cátedra.
-
----
-
-## Consultas pendientes con la cátedra
-
-1. **Orden de los RND en cada llegada**: ¿primero el tiempo hasta la próxima llegada y después las personas del grupo, o al revés? Usamos el orden del diagrama de la teoría ("programar siguiente llegada" primero).
-2. **Orden de las primeras llegadas** al inicializar: ¿COVID primero (como en el enunciado) o gripe?
-3. **Vencimiento por defecto** ("X hs" no tiene valor): usamos 1 h. Con esos datos las dosis descartadas dan 0 (ver [Análisis de resultados](#análisis-de-resultados)).
+Los dos órdenes de RND cambian qué número aleatorio usa cada variable, y por lo tanto todas las filas.
 
 ---
 
@@ -305,7 +296,7 @@ Por defecto la simulación arranca con el vacunatorio vacío, como si recién ab
 
 El **lote en curso no se carga aparte**: se deduce de los grupos que tienen personas "en lote". Así es más difícil cargar algo incoherente.
 
-Ejemplo (el que viene en el archivo): dos grupos de COVID esperando (3 y 2 personas, 5 pendientes), el enfermero vacunando a 3 de un grupo de gripe de 4 hasta el minuto 0,9, y una caja de gripe abierta hace 25 minutos con 4 dosis, que vence en el minuto 35.
+Ejemplo (el que viene en el archivo): dos grupos de COVID esperando (3 y 2 personas, 5 pendientes), el enfermero vacunando un grupo de gripe de 4 (completo) hasta el minuto 0,9, y una caja de gripe abierta hace 25 minutos con 4 dosis, que vence en el minuto 35.
 
 ### Validación
 
@@ -313,7 +304,8 @@ El estado se valida contra las reglas del modelo y contra los **parámetros actu
 
 - En cada grupo, vacunados + en lote + pendientes = tamaño, y el tamaño respeta el máximo de personas por grupo.
 - Un grupo ya vacunado completo no puede seguir en el sistema, y su hora de llegada es ≤ 0.
-- El lote en curso es de un solo tipo: exactamente 5 personas si es COVID, como máximo 10 si es gripe.
+- El lote en curso es de un solo tipo: exactamente 5 personas si es COVID; si es gripe, un solo grupo completo.
+- Los grupos de gripe no se parten: ninguno tiene vacunados, y el que está en lote no tiene pendientes.
 - El fin del lote es mayor a 0 y no puede superar su duración completa (personas · segundos por persona). Sin lote, el fin de vacunación es `null`.
 - La caja tiene entre 1 y 10 dosis, se abrió antes del inicio, vence después del inicio y vence exactamente "vencimiento" minutos después de abierta.
 - Las próximas llegadas son mayores a 0 o `null`, y el último tipo aplicado es COVID, gripe o `null`.
@@ -344,7 +336,7 @@ El motor vuelve a validar al arrancar, como red de seguridad: si algo se escapar
 
 ## Análisis de resultados
 
-Con los valores por defecto (24 h, generador del enunciado, precisión completa) se simulan **1145 iteraciones**:
+Con los valores por defecto (24 h, generador del enunciado, precisión completa) se simulan **1130 iteraciones**:
 
 | Estadística                             | Valor                    |
 | --------------------------------------- | ------------------------ |
@@ -352,12 +344,12 @@ Con los valores por defecto (24 h, generador del enunciado, precisión completa)
 | Dosis de gripe aplicadas                | 714                      |
 | Dosis de gripe descartadas              | 0                        |
 | Dosis de gripe sin usar al final        | 6                        |
-| Espera promedio COVID                   | 2,966263 min             |
-| Espera promedio gripe                   | 0,377401 min             |
+| Espera promedio COVID                   | 2,920061 min             |
+| Espera promedio gripe                   | 0,533998 min             |
 | Ocupación del enfermero                 | 41,09 %                  |
-| Espera máxima COVID / gripe             | 21,681152 / 5,651319 min |
-| Personas promedio en cola COVID / gripe | 2,293962 / 0,224182      |
-| Permanencia promedio COVID / gripe      | 6,933284 / 1,488859 min  |
+| Espera máxima COVID / gripe             | 21,681152 / 7,109541 min |
+| Personas promedio en cola COVID / gripe | 2,267226 / 0,257284      |
+| Permanencia promedio COVID / gripe      | 6,882029 / 1,443026 min  |
 | Cajas / dosis de COVID                  | 180 / 900                |
 
 **Lectura**:
@@ -370,12 +362,14 @@ Efecto del vencimiento sobre las preguntas de gripe (24 h, resto por defecto):
 
 | Vencimiento | Cajas colocadas | Dosis descartadas |
 | ----------- | --------------- | ----------------- |
-| 15 min      | 90              | 181               |
+| 15 min      | 91              | 191               |
 | 30 min      | 74              | 18                |
 | 1 h         | 72              | 0                 |
 | 2 h         | 72              | 0                 |
 
 Con vencimientos cortos se abren más cajas: cada caja que vence con dosis sobrantes obliga a abrir otra.
+
+Como las cajas se abren a demanda y un grupo puede completarse con dos cajas, una caja solo pierde dosis si vence: con 1 hora de vencimiento, las 72 cajas dan 714 dosis aplicadas, 0 descartadas y 6 sin usar al final (72 · 10 = 714 + 0 + 6).
 
 ---
 
@@ -383,19 +377,19 @@ Con vencimientos cortos se abren más cajas: cada caja que vence con dosis sobra
 
 ### Grupos de columnas
 
-| Grupo                         | Columnas                                                                                                                    |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Fila                          | Número de fila (queda anclada al hacer scroll horizontal)                                                                   |
-| Evento y reloj                | Evento, reloj en minutos, hora hh:mm:ss                                                                                     |
-| Llegada grupo COVID / gripe   | RND llegada, tiempo entre llegadas, próxima llegada, RND tamaño, personas                                                   |
-| Enfermero (servidor)          | Estado, motivo del lote, composición del lote, personas en lote, duración del lote, fin de vacunación, último tipo aplicado |
-| Caja de gripe abierta         | Estado, número, dosis restantes, hora de apertura, vencimiento, novedad de caja                                             |
-| Colas                         | Personas y grupos en cola, por tipo                                                                                         |
-| Cajas y dosis                 | Cajas y dosis de gripe (abiertas, aplicadas, descartadas) y de COVID                                                        |
-| Espera grupos COVID / gripe   | Σ espera, grupos, promedio, máxima                                                                                          |
-| Permanencia                   | Σ permanencia y grupos retirados, por tipo                                                                                  |
-| Acumuladores de tiempo        | Tiempo ocupado del enfermero, Σ personas · Δt por tipo                                                                      |
-| Grupo COVID / gripe · lugar k | Grupo, estado, tamaño, vacunados, en lote, pendientes, hora de llegada                                                      |
+| Grupo                         | Columnas                                                                                                                         |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Fila                          | Número de fila (siempre anclada al hacer scroll horizontal; con el botón "Fijar evento y reloj" también se anclan esas columnas) |
+| Evento y reloj                | Evento, reloj en minutos, hora hh:mm:ss                                                                                          |
+| Llegada grupo COVID / gripe   | RND llegada, tiempo entre llegadas, próxima llegada, RND tamaño, personas                                                        |
+| Enfermero (servidor)          | Estado, motivo del lote, composición del lote, personas en lote, duración del lote, fin de vacunación, último tipo aplicado      |
+| Caja de gripe abierta         | Estado, número, dosis restantes, hora de apertura, vencimiento, novedad de caja                                                  |
+| Colas                         | Personas y grupos en cola, por tipo                                                                                              |
+| Cajas y dosis                 | Cajas y dosis de gripe (abiertas, aplicadas, descartadas) y de COVID                                                             |
+| Espera grupos COVID / gripe   | Σ espera, grupos, promedio, máxima                                                                                               |
+| Permanencia                   | Σ permanencia y grupos retirados, por tipo                                                                                       |
+| Acumuladores de tiempo        | Tiempo ocupado del enfermero, Σ personas · Δt por tipo                                                                           |
+| Grupo COVID / gripe · lugar k | Grupo, estado, tamaño, vacunados, en lote, pendientes, hora de llegada                                                           |
 
 Los **próximos eventos** están en sus objetos: próxima llegada (en cada bloque de llegada), fin de vacunación (enfermero) y vencimiento (caja). Los RND y los valores sorteados aparecen solo en la fila del evento que los usó.
 
@@ -411,9 +405,11 @@ Cada grupo ocupa un **lugar** de su tipo al llegar (el primero libre) y lo conse
 
 ### Selección de fila y foto del instante
 
-- Clic en una fila para seleccionarla, o flechas ↑ ↓ con la tabla enfocada. La selección se mantiene al hacer scroll vertical u horizontal.
+- Clic en una fila para seleccionarla, o flechas ↑ ↓ con la tabla enfocada. Con las flechas, la tabla (y la página, si hace falta) acompaña a la fila para que no salga de la vista. La selección se mantiene al hacer scroll vertical u horizontal.
+- El botón **"Fijar evento y reloj"** (arriba a la derecha de la tabla) deja anclados el evento, el reloj y la hora junto a la fila al desplazarse a la derecha. Se vuelve a tocar para soltarlos.
 - La tabla es virtualizada (solo dibuja las filas visibles), con encabezados anclados y sin parpadeos, aunque se muestren 100.000 filas.
 - Debajo, la **foto del instante** muestra la fila seleccionada como tarjetas: el enfermero, la caja de gripe y cada grupo con su estado. Cada persona del grupo es un punto: lleno (vacunada), amarillo (en el lote actual) o hueco (pendiente).
+- Junto al título de la foto, **"← Anterior" y "Siguiente →"** pasan a la fila mostrada anterior o siguiente (incluida la última, aunque haya quedado fuera de las mostradas); la tabla se desplaza hasta esa fila. Se desactivan en la primera y en la última; sin fila seleccionada, "Siguiente" arranca por la primera.
 - La foto lista los **próximos eventos programados ordenados por hora** (si empatan, por la prioridad configurada). El primero, marcado "el siguiente", es el evento de la fila de abajo.
 
 **Qué son los próximos eventos**: en cada instante solo se conoce el próximo evento de cada tipo (una llegada COVID, una de gripe, el fin del lote en curso y el vencimiento de la caja abierta). Los demás se generan a medida que ocurren: por ejemplo, el fin de un lote que todavía no arrancó no figura hasta que ese lote empieza. Por eso la lista no coincide con todas las filas que siguen, pero el primero siempre es la fila de abajo.
@@ -474,7 +470,7 @@ Los decimales van truncados a la precisión elegida (6 si es "Completa") y las c
 
 ## Presentación
 
-8 slides a pantalla completa (navegación con flechas ↑ ↓, Inicio y Fin). Ninguna necesita scroll en 1366 × 768 ni en 1440 × 900. Los textos que dependen de los criterios del modelo (orden de los RND, criterio de espera, prioridad de eventos) se leen del código, así que no quedan desfasados.
+8 slides a pantalla completa (navegación con flechas ↑ ↓, Inicio y Fin). Ninguna necesita scroll en 1280 × 720, 1366 × 768 ni 1440 × 900. Los textos que dependen de los criterios del modelo (orden de los RND, criterio de espera, prioridad de eventos) se leen del código, así que no quedan desfasados.
 
 1. **Portada**: título, materia, curso; grupo e integrantes si están cargados.
 2. **El caso**: diagrama del vacunatorio y lo que se desea conocer.

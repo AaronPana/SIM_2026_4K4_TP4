@@ -50,13 +50,20 @@ export default function LeyendaVector() {
             <div>
               <dt className="leyenda-motivo">Abre caja 12</dt>
               <dd>
-                Un lote de gripe arrancó sin caja abierta: suma una caja
-                colocada.
+                Un grupo de gripe empezó a vacunarse y las dosis que quedaban no
+                alcanzaban: se abre otra caja (suma una colocada).
               </dd>
             </div>
             <div>
               <dt className="leyenda-motivo">Caja 12 agotada</dt>
               <dd>Se usaron todas sus dosis; su vencimiento se cancela.</dd>
+            </div>
+            <div>
+              <dt className="leyenda-motivo">Caja 11 agotada · Abre caja 12</dt>
+              <dd>
+                Al grupo le faltaban dosis: usa las que quedaban y completa con
+                la caja nueva.
+              </dd>
             </div>
             <div>
               <dt className="leyenda-motivo">Vence caja 12: descarta 4</dt>

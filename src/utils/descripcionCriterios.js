@@ -63,7 +63,7 @@ export const CRITERIOS_DEL_MODELO = [
   {
     criterio: "Espera de un grupo",
     valor: `Hasta que empieza a vacunarse el ${TEXTO_INTEGRANTE_ESPERA}`,
-    detalle: "Solo cambia el resultado en los grupos partidos.",
+    detalle: "Solo cambia el resultado en los grupos partidos (solo COVID).",
   },
   {
     criterio: "Prioridad de eventos simultáneos",

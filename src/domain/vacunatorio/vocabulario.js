@@ -48,7 +48,7 @@ export const ESTADO_VACUNANDO = {
   GRIPE: ESTADO_ENFERMERO.VACUNANDO_GRIPE,
 };
 
-// Estados de un grupo. "Parcial" y "resto" aparecen cuando el lote no alcanza para todo el grupo.
+// Estados de un grupo. "Parcial" y "resto" solo aparecen en COVID, cuando el lote de 5 no alcanza para todo el grupo.
 export const ESTADO_GRUPO = {
   ESPERANDO: "Esperando",
   VACUNANDOSE: "Vacunándose",
@@ -61,9 +61,9 @@ export const DESCRIPCION_ESTADO_GRUPO = {
   [ESTADO_GRUPO.VACUNANDOSE]:
     "Todos sus pendientes están en el lote actual; se retira al terminar.",
   [ESTADO_GRUPO.VACUNANDOSE_PARCIAL]:
-    "Una parte está en el lote; el resto no entró por falta de dosis.",
+    "Solo COVID: una parte está en el lote de 5; el resto no entró.",
   [ESTADO_GRUPO.ESPERANDO_RESTO]:
-    "Ya se vacunó una parte; espera el próximo lote para el resto.",
+    "Solo COVID: ya se vacunó una parte; espera el próximo lote para el resto.",
 };
 
 export const ESTADO_CAJA_GRIPE = { SIN_CAJA: "Sin caja", ABIERTA: "Abierta" };

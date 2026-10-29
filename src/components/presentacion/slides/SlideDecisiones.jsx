@@ -26,17 +26,14 @@ const DECISIONES = [
     `Inicio: ${TEXTO_ORDEN_LLEGADAS_INICIALES}. En cada llegada: ${TEXTO_ORDEN_RND_EN_LLEGADA}.`,
   ],
   ["Lote de COVID", "Una caja por lote: exactamente 5 personas."],
-  [
-    "Lote de gripe",
-    "Hasta las dosis que le quedan a la caja abierta (máximo 10).",
-  ],
+  ["Lote de gripe", "Un grupo completo por lote: nunca se parte."],
   [
     "Apertura de la caja de gripe",
-    "Al iniciar un lote de gripe sin caja abierta.",
+    "A demanda, al atender al grupo: usa las que quedan y completa con una nueva.",
   ],
   [
     "Grupo partido",
-    'Queda "Esperando resto" al frente de la cola; para el mínimo de 5 cuentan solo los pendientes.',
+    'Solo COVID: queda "Esperando resto" al frente; para el mínimo de 5 cuentan solo los pendientes.',
   ],
   [
     "Alternancia preferente",

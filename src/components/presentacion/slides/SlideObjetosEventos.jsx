@@ -29,7 +29,7 @@ const OBJETOS = [
     "Grupo de gripe",
     "Temporal · cliente",
     lista(ESTADO_GRUPO),
-    "Ídem; también puede partirse si la caja no alcanza",
+    "Ídem; nunca se parte: un grupo completo por lote",
   ],
   [
     "Caja de gripe",
