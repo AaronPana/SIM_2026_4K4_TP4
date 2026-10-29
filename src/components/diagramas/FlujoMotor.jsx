@@ -10,7 +10,7 @@ const PASOS = [
   "¿Reloj ≥ j y faltan filas por mostrar? → copiar la fila",
 ];
 const X = 20;
-const W = 470;
+const W = 530;
 const H = 40;
 const GAP = 14;
 
@@ -19,7 +19,7 @@ export default function FlujoMotor() {
   return (
     <svg
       className="flujo"
-      viewBox={`0 0 560 ${yFin + H + 8}`}
+      viewBox={`0 0 ${X + W + 70} ${yFin + H + 8}`}
       role="img"
       aria-label="Ciclo del motor de eventos"
     >
@@ -49,7 +49,7 @@ export default function FlujoMotor() {
               rx="8"
               className={`flujo-paso ${i === 0 ? "flujo-inicio" : ""} ${i === 5 ? "es-decision" : ""}`}
             />
-            <text x={X + 14} y={y + 25} className="flujo-texto">
+            <text x={X + 14} y={y + 26} className="flujo-texto">
               {texto}
             </text>
             <line
@@ -64,7 +64,7 @@ export default function FlujoMotor() {
         );
       })}
       <rect x={X} y={yFin} width={W} height={H} rx="20" className="flujo-fin" />
-      <text x={X + 14} y={yFin + 25} className="flujo-texto">
+      <text x={X + 14} y={yFin + 26} className="flujo-texto">
         ¿Fin de simulación o tope de iteraciones? No: volver · Sí: fin
       </text>
       <path

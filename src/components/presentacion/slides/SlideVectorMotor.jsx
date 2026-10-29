@@ -30,7 +30,7 @@ export default function SlideVectorMotor({ onComenzar }) {
     <section className="slide">
       <Reveal className="slide-cuerpo">
         <h2 className="slide-titulo">Vector de estado y motor</h2>
-        <div className="columnas-slide">
+        <div className="columnas-slide columnas-con-diagrama">
           <div>
             <dl className="lista-definiciones lista-definiciones-compacta">
               {PARTES.map(([t, d]) => (

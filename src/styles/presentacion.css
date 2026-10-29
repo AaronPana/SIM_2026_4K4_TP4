@@ -204,8 +204,8 @@
 /* Portada: título a la izquierda, flujo del vacunatorio a la derecha. */
 .slide-portada {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: 3rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 2.5rem;
   align-items: center;
   background: var(--tinta);
   color: #fff;
@@ -309,7 +309,7 @@
   stroke-width: 1.5;
 }
 .flujo-texto {
-  font-size: 14px;
+  font-size: 16px;
   fill: var(--tinta);
 }
 .flujo-linea {
@@ -325,7 +325,7 @@
   stroke: var(--tinta);
 }
 .flujo-etiqueta {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   fill: var(--texto-suave);
 }
@@ -334,7 +334,7 @@
 .diagrama {
   width: 100%;
   height: auto;
-  max-height: 260px;
+  max-height: 300px;
 }
 .nodo rect {
   fill: var(--superficie);
@@ -358,13 +358,13 @@
   stroke: var(--tinta);
 }
 .nodo-titulo {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   text-anchor: middle;
   fill: var(--tinta);
 }
 .nodo-detalle {
-  font-size: 13px;
+  font-size: 15px;
   text-anchor: middle;
   fill: var(--texto-suave);
 }
@@ -380,7 +380,7 @@
   stroke: var(--gripe);
 }
 .arista-etiqueta {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   fill: var(--texto-suave);
 }
@@ -390,7 +390,7 @@
 
 /* Variante oscura para la portada. */
 .diagrama-oscuro {
-  max-height: 340px;
+  max-height: 400px;
 }
 .diagrama-oscuro .nodo rect {
   fill: var(--tinta-2);
@@ -431,7 +431,11 @@
 }
 /* El diagrama de la slide del caso se achica para que todo entre en pantalla. */
 .diagrama-caso .diagrama {
-  max-height: 220px;
+  max-height: 270px;
+}
+/* Slides con diagrama a la derecha: el diagrama gana ancho para que su texto se lea mejor. */
+.columnas-con-diagrama {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 /* Los botones dentro de columnas no se estiran a todo el ancho. */
 .columnas-slide .boton {

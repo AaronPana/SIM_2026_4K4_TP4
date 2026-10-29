@@ -1,9 +1,9 @@
 // Decisión del enfermero cada vez que queda libre: alternancia preferente entre COVID y gripe.
 import { MINIMO_PACIENTES_ABRIR_CAJA_COVID } from "../../config/constantes.js";
 
-const ANCHO_IZQ = 330;
+const ANCHO_IZQ = 360;
 const ANCHO_DER = 190;
-const X_DER = 390;
+const X_DER = 420;
 const ALTO = 46;
 
 // Caja con texto centrado (una o dos líneas).
@@ -22,7 +22,7 @@ function Caja({ x, y, w, clase = "", lineas }) {
         <text
           key={i}
           x={x + w / 2}
-          y={y + (lineas.length === 1 ? 28 : 20 + i * 16)}
+          y={y + (lineas.length === 1 ? 29 : 19 + i * 18)}
           className="flujo-texto flujo-centrado"
         >
           {t}
@@ -48,7 +48,7 @@ export default function FlujoEnfermero() {
   return (
     <svg
       className="flujo"
-      viewBox="0 0 600 392"
+      viewBox="0 0 630 392"
       role="img"
       aria-label="Decisión del enfermero al quedar libre"
     >

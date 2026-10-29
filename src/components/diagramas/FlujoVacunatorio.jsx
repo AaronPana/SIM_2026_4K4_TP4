@@ -20,7 +20,7 @@ const vence = minutosAHoras(
 
 // Nodo con título y hasta dos renglones de detalle.
 function Nodo({ x, y, w, h, clase, titulo, lineas = [] }) {
-  const inicio = y + h / 2 - lineas.length * 9;
+  const inicio = y + h / 2 - lineas.length * 10;
   return (
     <g className={`nodo ${clase}`}>
       <rect x={x} y={y} width={w} height={h} rx="8" />
@@ -31,7 +31,7 @@ function Nodo({ x, y, w, h, clase, titulo, lineas = [] }) {
         <text
           key={i}
           x={x + w / 2}
-          y={inicio + 23 + i * 17}
+          y={inicio + 24 + i * 19}
           className="nodo-detalle"
         >
           {linea}

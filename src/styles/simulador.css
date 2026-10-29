@@ -240,29 +240,56 @@
   border-top: 1px solid var(--linea);
 }
 
-/* Criterios del modelo (solo lectura). */
+/* Criterios del modelo (solo lectura): tarjetas de a 3 por fila; la fila incompleta queda centrada. */
 .criterios-lista {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 0.75rem 1.5rem;
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
 }
 .criterio {
-  padding-left: 0.75rem;
-  border-left: 2px solid var(--linea);
+  flex: 0 1 calc((100% - 2rem) / 3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-top: 3px solid var(--tinta);
+  border-radius: var(--radio);
 }
 .criterio dt {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texto-suave);
 }
 .criterio dd {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.3rem;
 }
 .criterio-valor {
+  font-size: 1.0625rem;
   font-weight: 600;
+  line-height: 1.35;
+  color: var(--tinta);
+}
+.criterio .campo-ayuda {
+  font-size: 0.875rem;
+}
+@media (max-width: 900px) {
+  .criterio {
+    flex-basis: calc((100% - 1rem) / 2);
+  }
+}
+@media (max-width: 600px) {
+  .criterio {
+    flex-basis: 100%;
+  }
 }
 
 /* Estado inicial (solo lectura). */
@@ -462,6 +489,57 @@
 .tabla-vector thead .col-fija {
   z-index: 3;
 }
+/* Columnas de "Evento y reloj" ancladas con el botón; el "left" lo calcula la tabla. */
+.tabla-vector .col-anclada {
+  position: sticky;
+  z-index: 1;
+}
+.tabla-vector tbody .col-anclada {
+  background: var(--superficie);
+}
+.tabla-vector thead .col-anclada {
+  z-index: 3;
+}
+/* Sombra en el borde de lo anclado: marca dónde pasa el resto de la tabla por debajo. */
+.tabla-vector .col-anclada-ultima {
+  box-shadow: 4px 0 6px -3px rgba(20, 30, 45, 0.35);
+}
+.tabla-herramientas {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 0.5rem;
+}
+.boton-anclar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.boton-anclar:hover {
+  border-color: var(--tinta);
+}
+.boton-anclar svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.boton-anclar.es-activo {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: #fff;
+}
 .tabla-vector .celda-texto {
   text-align: left;
 }
@@ -500,6 +578,37 @@
 /* Foto del instante. */
 .foto-titulo {
   margin-top: 1.25rem;
+}
+/* Título de la foto con los botones para ir a la fila anterior o siguiente. */
+.foto-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 1.25rem 0 0.5rem;
+}
+.foto-cabecera .subtitulo-panel {
+  margin: 0;
+}
+.foto-navegacion {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.foto-posicion {
+  min-width: 5.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.boton-anclar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.boton-anclar:disabled:hover {
+  border-color: var(--linea);
 }
 .foto-vacia {
   padding: 1rem;
