@@ -49,11 +49,24 @@ export default function Simulador({ form, simulacion, onVolver }) {
   // Una corrida nueva limpia la selección anterior.
   useEffect(() => setFilaSeleccionada(null), [resultado]);
 
-  const filaDeLaFoto = useMemo(() => {
-    if (!resultado || filaSeleccionada === null) return null;
-    if (resultado.ultima.fila === filaSeleccionada) return resultado.ultima;
-    return resultado.filas.find((f) => f.fila === filaSeleccionada) ?? null;
-  }, [resultado, filaSeleccionada]);
+  // Filas que se pueden seleccionar, en orden: las mostradas y, si quedó afuera, la última.
+  const filasNavegables = useMemo(() => {
+    if (!resultado) return [];
+    const { filas, ultima, ultimaIncluida } = resultado;
+    return ultimaIncluida ? filas : [...filas, ultima];
+  }, [resultado]);
+  const indiceFoto = filasNavegables.findIndex(
+    (f) => f.fila === filaSeleccionada,
+  );
+  const filaDeLaFoto = indiceFoto === -1 ? null : filasNavegables[indiceFoto];
+
+  // Anterior / siguiente para la foto. Sin selección, "Siguiente" arranca por la primera fila.
+  const hayAnterior = indiceFoto > 0;
+  const haySiguiente = indiceFoto < filasNavegables.length - 1;
+  const moverFoto = (paso) => {
+    const destino = filasNavegables[indiceFoto + paso];
+    if (destino) setFilaSeleccionada(destino.fila);
+  };
 
   // Avisa si el formulario cambió después de la última corrida.
   const desactualizado =
@@ -133,7 +146,30 @@ export default function Simulador({ form, simulacion, onVolver }) {
                 filaSeleccionada={filaSeleccionada}
                 onSeleccionar={setFilaSeleccionada}
               />
-              <h3 className="subtitulo-panel foto-titulo">Foto del instante</h3>
+              <div className="foto-cabecera">
+                <h3 className="subtitulo-panel">Foto del instante</h3>
+                <div className="foto-navegacion">
+                  <button
+                    type="button"
+                    className="boton-anclar"
+                    onClick={() => moverFoto(-1)}
+                    disabled={!hayAnterior}
+                  >
+                    ← Anterior
+                  </button>
+                  <span className="foto-posicion">
+                    {filaDeLaFoto ? `Fila ${filaDeLaFoto.fila}` : "Sin fila"}
+                  </span>
+                  <button
+                    type="button"
+                    className="boton-anclar"
+                    onClick={() => moverFoto(1)}
+                    disabled={!haySiguiente}
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              </div>
               <FotoInstante
                 fila={filaDeLaFoto}
                 precision={resultado.parametros.ejecucion.precision}
